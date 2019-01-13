@@ -1,10 +1,18 @@
 --[[
 	Done as a data-update to allow other mods to manipulate the base lamp before we clone it. ie: change turn on/off times.
 ]]
+local Constants = require("constants")
+
 GenerateHiddenLights = function()
 	local poleLights = {}
-	for tile=1,75 do
-		table.insert(poleLights, GenerateHiddenLight(tile, tile))
+	if tonumber(settings.startup["light-power-usage-watts"].value) > 0 then
+		for tile=1,75 do
+			table.insert(poleLights, GenerateHiddenLight(tile, tile))
+		end
+	else
+		for tile=1,75 do
+			table.insert(poleLights, GenerateHiddenLightNoPower(tile, tile))
+		end
 	end
 	data:extend(poleLights)
 end
@@ -32,6 +40,24 @@ GenerateHiddenLight = function(tile, name)
 	hiddenLight.energy_usage_per_tick = settings.startup["light-power-usage-watts"].value .. "W"
 	hiddenLight.energy_source.render_no_network_icon = false
 	hiddenLight.energy_source.render_no_power_icon = false
+	return hiddenLight
+end
+
+--Explosion lasts for years of ticks
+GenerateHiddenLightNoPower = function(tile, name)
+	if name == nil then name = tile end
+	local lightRange = tile * 5
+	hiddenLight = {
+		name = "hiddenlight-" .. name,
+		type = "explosion",
+		collision_mask = {},
+		flags = {"not-blueprintable", "not-deconstructable", "placeable-off-grid", "not-on-map"},
+		selectable_in_game = false,
+		sound = {filename = Constants.GraphicsModName .. "/sound/silence.ogg", volume = 0},
+		animations = {{width = 0, height = 0, frame_count = 1, filename = "__core__/graphics/empty.png", animation_speed = 0.000000000000001}},
+		light = {intensity = 0.6, size = lightRange, color = {r=1.0, g=1.0, b=1.0}},
+		smoke_slow_down_factor = 1
+	}
 	return hiddenLight
 end
 
